@@ -1,4 +1,4 @@
-# Better Skills for Pi
+# Pi Better Skills
 
 Better Skills replaces the awkward `/skill:name` discovery flow with an in-pane fuzzy picker.
 

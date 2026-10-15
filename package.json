@@ -1,7 +1,15 @@
 {
   "name": "pi-better-skills",
   "version": "0.1.0",
-  "description": "A fuzzy, usage-aware skill picker for Pi",
+  "description": "Pi Better Skills: a fuzzy, usage-aware skill picker",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ianjamesburke/pi-better-skills.git"
+  },
+  "homepage": "https://github.com/ianjamesburke/pi-better-skills#readme",
+  "bugs": {
+    "url": "https://github.com/ianjamesburke/pi-better-skills/issues"
+  },
   "keywords": [
     "pi-package",
     "pi",
