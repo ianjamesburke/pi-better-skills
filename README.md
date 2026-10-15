@@ -4,10 +4,12 @@ Better Skills replaces the awkward `/skill:name` discovery flow with an in-pane 
 
 Run `/skills`, type to filter, use the arrow keys to choose a skill, and add the task to run. An empty picker learns from use: most recently used skills come first, then the most frequently used. Once you type, the best fuzzy text match comes first.
 
-## Install locally
+## Install
+
+Install globally:
 
 ```sh
-pi install /absolute/path/to/pi-better-skills
+pi install npm:pi-better-skills
 ```
 
 Restart Pi (or run `/reload`), then run `/skills`.
