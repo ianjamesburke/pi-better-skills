@@ -1,0 +1,21 @@
+{
+  "name": "pi-better-skills",
+  "version": "0.1.0",
+  "description": "A fuzzy, usage-aware skill picker for Pi",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "skills",
+    "fuzzy-finder"
+  ],
+  "license": "MIT",
+  "pi": {
+    "extensions": [
+      "./extensions/better-skills.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  }
+}
