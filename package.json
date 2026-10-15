@@ -1,6 +1,6 @@
 {
   "name": "pi-better-skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi Better Skills: a fuzzy, usage-aware skill picker",
   "repository": {
     "type": "git",
