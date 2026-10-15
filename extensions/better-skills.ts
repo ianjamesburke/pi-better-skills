@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext, SlashCommandInfo, Theme } from "@earendil-works/pi-coding-agent";
-import { CURSOR_MARKER, fuzzyFilter, matchesKey, renderFakeCursor, truncateToWidth, type Focusable, visibleWidth } from "@earendil-works/pi-tui";
+import { CURSOR_MARKER, fuzzyFilter, matchesKey, renderFakeCursor, truncateToWidth, type AutocompleteProvider, type Focusable, type TUI, visibleWidth } from "@earendil-works/pi-tui";
 
 type SkillCommand = SlashCommandInfo & { source: "skill" };
 type SkillUsage = { uses: number; lastUsedAt: number };
@@ -15,8 +15,10 @@ function skillName(command: SkillCommand): string {
 }
 
 function searchSkills(skills: SkillCommand[], query: string): SkillCommand[] {
-	const matches = fuzzyFilter(skills, query, (skill) => `${skillName(skill)} ${skill.description ?? ""}`);
-	return [...matches].sort(compareSkillUsage);
+	// Browsing favours habits; searching must favour what was typed. `fuzzyFilter`
+	// already ranks exact and tighter matches ahead of broad description matches.
+	if (!query.trim()) return [...skills].sort(compareSkillUsage);
+	return fuzzyFilter(skills, query, (skill) => `${skillName(skill)} ${skill.description ?? ""}`);
 }
 
 function displaySkill(skill: SkillCommand): string {
@@ -24,6 +26,10 @@ function displaySkill(skill: SkillCommand): string {
 }
 
 export default function betterSkills(pi: ExtensionAPI) {
+	pi.on("session_start", (_event, ctx) => {
+		ctx.ui.addAutocompleteProvider((current) => hideNativeSkillCommands(current));
+	});
+
 	pi.on("input", (event) => {
 		// Direct native invocations do not pass through /skills. The palette records
 		// its own extension-originated invocation below, so do not double-count it.
@@ -69,7 +75,7 @@ export default function betterSkills(pi: ExtensionAPI) {
 async function chooseSkill(skills: SkillCommand[], initialQuery: string, ctx: ExtensionCommandContext): Promise<SkillCommand | undefined> {
 	if (ctx.mode === "tui") {
 		const selectedName = await ctx.ui.custom<string | undefined>(
-			(_tui, theme, _keybindings, done) => new SkillsPaletteComponent(skills, initialQuery, theme, done),
+			(tui, theme, _keybindings, done) => new SkillsPaletteComponent(tui, skills, initialQuery, theme, done),
 		);
 		return skills.find((skill) => skillName(skill) === selectedName);
 	}
@@ -101,6 +107,7 @@ class SkillsPaletteComponent implements Focusable {
 	private filtered: SkillCommand[];
 
 	constructor(
+		private readonly tui: TUI,
 		private readonly skills: SkillCommand[],
 		initialQuery: string,
 		private readonly theme: Theme,
@@ -120,10 +127,12 @@ class SkillsPaletteComponent implements Focusable {
 		}
 		if (matchesKey(data, "up")) {
 			this.selected = Math.max(0, this.selected - 1);
+			this.tui.requestRender();
 			return;
 		}
 		if (matchesKey(data, "down")) {
 			this.selected = Math.min(Math.max(0, this.filtered.length - 1), this.selected + 1);
+			this.tui.requestRender();
 			return;
 		}
 		if (matchesKey(data, "backspace")) {
@@ -133,8 +142,16 @@ class SkillsPaletteComponent implements Focusable {
 			this.updateMatches();
 			return;
 		}
-		if (matchesKey(data, "left")) return void (this.cursor = Math.max(0, this.cursor - 1));
-		if (matchesKey(data, "right")) return void (this.cursor = Math.min(this.query.length, this.cursor + 1));
+		if (matchesKey(data, "left")) {
+			this.cursor = Math.max(0, this.cursor - 1);
+			this.tui.requestRender();
+			return;
+		}
+		if (matchesKey(data, "right")) {
+			this.cursor = Math.min(this.query.length, this.cursor + 1);
+			this.tui.requestRender();
+			return;
+		}
 		if (data.length === 1 && data.charCodeAt(0) >= 32) {
 			this.query = this.query.slice(0, this.cursor) + data + this.query.slice(this.cursor);
 			this.cursor++;
@@ -176,7 +193,22 @@ class SkillsPaletteComponent implements Focusable {
 	private updateMatches(): void {
 		this.filtered = searchSkills(this.skills, this.query);
 		this.selected = 0;
+		this.tui.requestRender();
 	}
+}
+
+function hideNativeSkillCommands(current: AutocompleteProvider): AutocompleteProvider {
+	return {
+		...current,
+		async getSuggestions(lines, cursorLine, cursorCol, options) {
+			const suggestions = await current.getSuggestions(lines, cursorLine, cursorCol, options);
+			const commandText = (lines[cursorLine] ?? "").slice(0, cursorCol).trimStart();
+			if (!suggestions || !commandText.startsWith("/") || commandText.includes(" ")) return suggestions;
+
+			const items = suggestions.items.filter((item) => !item.value.startsWith("skill:"));
+			return items.length > 0 ? { ...suggestions, items } : null;
+		},
+	};
 }
 
 function compareSkillUsage(a: SkillCommand, b: SkillCommand): number {

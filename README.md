@@ -2,7 +2,7 @@
 
 Better Skills replaces the awkward `/skill:name` discovery flow with an in-pane fuzzy picker.
 
-Run `/skills`, type to filter, use the arrow keys to choose a skill, and add the task to run. The picker learns from use: most recently used skills come first, then the most frequently used.
+Run `/skills`, type to filter, use the arrow keys to choose a skill, and add the task to run. An empty picker learns from use: most recently used skills come first, then the most frequently used. Once you type, the best fuzzy text match comes first.
 
 ## Install locally
 
