@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext, SlashCommandInfo, Theme } from "@earendil-works/pi-coding-agent";
-import { CURSOR_MARKER, fuzzyFilter, matchesKey, renderFakeCursor, truncateToWidth, type AutocompleteProvider, type Focusable, type TUI, visibleWidth } from "@earendil-works/pi-tui";
+import { CURSOR_MARKER, fuzzyFilter, matchesKey, renderFakeCursor, truncateToWidth, type Focusable, type TUI, visibleWidth } from "@earendil-works/pi-tui";
 
 type SkillCommand = SlashCommandInfo & { source: "skill" };
 type SkillUsage = { uses: number; lastUsedAt: number };
@@ -26,10 +26,6 @@ function displaySkill(skill: SkillCommand): string {
 }
 
 export default function betterSkills(pi: ExtensionAPI) {
-	pi.on("session_start", (_event, ctx) => {
-		ctx.ui.addAutocompleteProvider((current) => hideNativeSkillCommands(current));
-	});
-
 	pi.on("input", (event) => {
 		// Direct native invocations do not pass through /skills. The palette records
 		// its own extension-originated invocation below, so do not double-count it.
@@ -195,26 +191,6 @@ class SkillsPaletteComponent implements Focusable {
 		this.selected = 0;
 		this.tui.requestRender();
 	}
-}
-
-function hideNativeSkillCommands(current: AutocompleteProvider): AutocompleteProvider {
-	return {
-		triggerCharacters: current.triggerCharacters,
-		async getSuggestions(lines, cursorLine, cursorCol, options) {
-			const suggestions = await current.getSuggestions(lines, cursorLine, cursorCol, options);
-			const commandText = (lines[cursorLine] ?? "").slice(0, cursorCol).trimStart();
-			if (!suggestions || !commandText.startsWith("/") || commandText.includes(" ")) return suggestions;
-
-			const items = suggestions.items.filter((item) => !item.value.startsWith("skill:"));
-			return items.length > 0 ? { ...suggestions, items } : null;
-		},
-		applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
-			return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
-		},
-		shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
-			return current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ?? true;
-		},
-	};
 }
 
 function compareSkillUsage(a: SkillCommand, b: SkillCommand): number {

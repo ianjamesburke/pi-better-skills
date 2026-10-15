@@ -12,6 +12,14 @@ pi install /absolute/path/to/pi-better-skills
 
 Restart Pi (or run `/reload`), then run `/skills`.
 
+For a single clean skill entry point, turn off Pi's native skill-command discovery in Settings, or add this to `~/.pi/agent/settings.json`:
+
+```json
+{ "enableSkillCommands": false }
+```
+
+This hides `/skill:name` from the slash menu while preserving explicit invocation, which Better Skills uses after selection.
+
 ## Design
 
 Pi's native `/skill:name` command and `@` file mention are useful primitives, but neither makes skill discovery pleasant. Better Skills supplies a compact, keyboard-first picker in the same editor region Pi uses for model selection.
