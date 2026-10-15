@@ -6,22 +6,10 @@ Run `/skills`, type to filter, use the arrow keys to choose a skill, and add the
 
 ## Install
 
-From npm (recommended):
+Install globally:
 
 ```sh
 pi install npm:pi-better-skills
-```
-
-Or install the tagged Git release without npm:
-
-```sh
-pi install git:github.com/ianjamesburke/pi-better-skills@v0.1.1
-```
-
-For local development:
-
-```sh
-pi install /absolute/path/to/pi-better-skills
 ```
 
 Restart Pi (or run `/reload`), then run `/skills`.
