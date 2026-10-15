@@ -199,7 +199,7 @@ class SkillsPaletteComponent implements Focusable {
 
 function hideNativeSkillCommands(current: AutocompleteProvider): AutocompleteProvider {
 	return {
-		...current,
+		triggerCharacters: current.triggerCharacters,
 		async getSuggestions(lines, cursorLine, cursorCol, options) {
 			const suggestions = await current.getSuggestions(lines, cursorLine, cursorCol, options);
 			const commandText = (lines[cursorLine] ?? "").slice(0, cursorCol).trimStart();
@@ -207,6 +207,12 @@ function hideNativeSkillCommands(current: AutocompleteProvider): AutocompletePro
 
 			const items = suggestions.items.filter((item) => !item.value.startsWith("skill:"));
 			return items.length > 0 ? { ...suggestions, items } : null;
+		},
+		applyCompletion(lines, cursorLine, cursorCol, item, prefix) {
+			return current.applyCompletion(lines, cursorLine, cursorCol, item, prefix);
+		},
+		shouldTriggerFileCompletion(lines, cursorLine, cursorCol) {
+			return current.shouldTriggerFileCompletion?.(lines, cursorLine, cursorCol) ?? true;
 		},
 	};
 }
